@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title">
+  <title id="title">Photon icon</title>
+  <rect width="512" height="512" rx="96" fill="#101820"/>
+  <path d="M134 256c0-67.4 54.6-122 122-122 52.1 0 96.6 32.7 114.1 78.7" fill="none" stroke="#F4BA45" stroke-width="34" stroke-linecap="round"/>
+  <path d="M378 256c0 67.4-54.6 122-122 122-52.1 0-96.6-32.7-114.1-78.7" fill="none" stroke="#1D8B7D" stroke-width="34" stroke-linecap="round"/>
+  <path d="M260 166 333 256l-73 90v-57h-92v-66h92z" fill="#FFFFFF"/>
+</svg>
