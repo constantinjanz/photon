@@ -1,5 +1,6 @@
 import QrScanner from "qr-scanner";
 import { useEffect, useRef, useState } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { createUrDecoder, createUrEncoder, type PhotonUrEncoder } from "./transfer/bcUr";
 import { sha256Hex } from "./transfer/crypto";
 import { createEnvelope, type PhotonEnvelopeHeader } from "./transfer/envelope";
@@ -72,38 +73,43 @@ export default function App() {
 function HomeScreen({ onSend, onReceive }: { onSend: () => void; onReceive: () => void }) {
   return (
     <section className="home-layout">
-      <div className="home-copy">
-        <p className="eyebrow">Photon</p>
-        <h1>Send a photo phone-to-phone with nothing in between.</h1>
-        <p className="lede">
-          No upload, no server, no account. Once Photon is loaded or installed, the transfer works on
-          airplane mode.
-        </p>
-        <div className="action-row">
-          <button className="button button--primary" onClick={onSend}>
-            Send a photo
-          </button>
-          <button className="button button--secondary" onClick={onReceive}>
-            Receive a photo
-          </button>
+      <TerminalNav detail="Offline-first - no server" />
+
+      <div className="home-grid">
+        <div className="home-copy">
+          <p className="eyebrow">phone -&gt; phone / nothing in between</p>
+          <h1>
+            send a photo phone-to-phone with <span>nothing in between.</span>
+          </h1>
+          <p className="lede">
+            No upload, no server, no account. Once Photon is loaded or installed, the transfer works on
+            airplane mode.
+          </p>
+
+          <div className="status-badges" aria-label="Privacy properties">
+            <StatusBadge label="offline" />
+            <StatusBadge label="no upload" />
+            <StatusBadge label="no account" />
+            <StatusBadge label="no trackers" />
+          </div>
+
+          <div className="action-row">
+            <ActionButton kind="primary" onClick={onSend} caption="pick a photo · show the code">
+              Send a photo
+            </ActionButton>
+            <ActionButton kind="secondary" onClick={onReceive} caption="open camera · read the light">
+              Receive a photo
+            </ActionButton>
+          </div>
+        </div>
+
+        <div className="home-art">
+          <PhotonBeam />
+          <PrivacyDisclosure />
         </div>
       </div>
 
-      <details className="privacy-note">
-        <summary>How private is this?</summary>
-        <div className="privacy-note__body">
-          <p>
-            The photo is compressed and encoded in your browser, then shown as QR frames. The other phone
-            rebuilds it from the camera feed. There is no account, backend, upload, telemetry, or tracker in
-            the transfer.
-          </p>
-          <p>
-            The first page load is still a normal web request to the host. After the app is cached or
-            installed, transfers need no internet connection. A visible QR animation can be read by people or
-            cameras nearby, and the received photo is saved on the receiver's device.
-          </p>
-        </div>
-      </details>
+      <footer className="home-footer">no accounts / no server / works on airplane mode</footer>
     </section>
   );
 }
@@ -212,8 +218,10 @@ function SendScreen({
 
       <div className="send-grid">
         <section className="control-panel">
+          <PanelHeader title="transfer settings" />
           <label className="file-picker">
             <span>{file ? "Choose another photo" : "Choose photo"}</span>
+            <small>local file · never uploaded</small>
             <input type="file" accept="image/*" onChange={(event) => chooseFile(event.target.files?.[0])} />
           </label>
 
@@ -229,14 +237,15 @@ function SendScreen({
 
           {prepared && (
             <div className="transfer-stats" aria-live="polite">
-              <span>{formatBytes(prepared.compressed.originalBytes)} original</span>
-              <span>{formatBytes(prepared.compressed.bytes.byteLength)} sending</span>
-              <span>{prepared.encoder.estimatedPartCount} base parts</span>
+              <StatusBadge label={`${formatBytes(prepared.compressed.originalBytes)} original`} />
+              <StatusBadge label={`${formatBytes(prepared.compressed.bytes.byteLength)} sending`} />
+              <StatusBadge label={`${prepared.encoder.estimatedPartCount} base parts`} />
             </div>
           )}
         </section>
 
         <section className="qr-stage" aria-live="polite">
+          <PanelHeader title="light output" />
           {prepared && !needsRebuild ? (
             <>
               <canvas ref={canvasRef} className="qr-canvas" aria-label="Animated transfer QR code" />
@@ -245,12 +254,12 @@ function SendScreen({
                 Done. Turn brightness up.
               </p>
               <div className="qr-meta">
-                <span>{settings.frameRate} fps</span>
-                <span>{settings.fragmentLength} fragment length</span>
-                <span>{frameCount} frames shown</span>
+                <StatusBadge label={`${settings.frameRate} fps`} />
+                <StatusBadge label={`${settings.fragmentLength} fragment length`} />
+                <StatusBadge label={`${frameCount} frames shown`} />
               </div>
               <button className="button button--ghost" onClick={onHome}>
-                Stop
+                Stop / Done
               </button>
             </>
           ) : (
@@ -426,8 +435,10 @@ function ReceiveScreen({ onHome }: { onHome: () => void }) {
 
       <div className="receive-grid">
         <section className="camera-stage">
+          <PanelHeader title="camera input" />
           {!photo && <video ref={videoRef} className="camera-video" muted playsInline />}
           {!photo && <div className="camera-frame" aria-hidden="true" />}
+          {!photo && <p className="camera-coach">point at the other phone's screen</p>}
           {photo && (
             <div className="result-preview">
               <img src={photo.url} alt="Received photo" />
@@ -436,6 +447,7 @@ function ReceiveScreen({ onHome }: { onHome: () => void }) {
         </section>
 
         <section className="receive-panel">
+          <PanelHeader title="receiver status" />
           <p className={`status ${progress.status === "error" ? "status--error" : ""}`}>{progress.message}</p>
 
           <div className="progress-block" aria-label={`Transfer progress ${percent}%`}>
@@ -461,7 +473,7 @@ function ReceiveScreen({ onHome }: { onHome: () => void }) {
           {photo && (
             <div className="download-area">
               <p>
-                {photo.name} · {formatBytes(photo.bytes)}
+                {photo.name} - {formatBytes(photo.bytes)}
               </p>
               <a className="button button--primary" href={photo.url} download={photo.name}>
                 Download
@@ -565,6 +577,7 @@ function SliderRow({
         <strong>{displayValue}</strong>
       </span>
       <input
+        style={{ "--value": `${((value - min) / (max - min)) * 100}%` } as CSSProperties}
         type="range"
         min={min}
         max={max}
@@ -579,11 +592,121 @@ function SliderRow({
 function TopBar({ title, onHome }: { title: string; onHome: () => void }) {
   return (
     <header className="top-bar">
-      <button className="button button--ghost" onClick={onHome}>
+      <button className="brand-button" onClick={onHome} aria-label="Go to Photon home">
+        <span className="photon-dot" aria-hidden="true" />
         Photon
       </button>
       <strong>{title}</strong>
     </header>
+  );
+}
+
+function TerminalNav({ detail }: { detail: string }) {
+  return (
+    <header className="terminal-nav">
+      <div className="brand-mark">
+        <span className="photon-dot" aria-hidden="true" />
+        Photon
+      </div>
+      <div>{detail}</div>
+    </header>
+  );
+}
+
+function ActionButton({
+  kind,
+  onClick,
+  caption,
+  children
+}: {
+  kind: "primary" | "secondary";
+  onClick: () => void;
+  caption: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="action-stack">
+      <button className={`button button--${kind}`} onClick={onClick}>
+        {children}
+      </button>
+      <span>{caption}</span>
+    </div>
+  );
+}
+
+function PanelHeader({ title }: { title: string }) {
+  return (
+    <div className="panel-header">
+      <span className="window-dots" aria-hidden="true">
+        <i />
+        <i />
+        <i />
+      </span>
+      <span>{title}</span>
+    </div>
+  );
+}
+
+function StatusBadge({ label }: { label: string }) {
+  return (
+    <span className="status-badge">
+      <span aria-hidden="true" />
+      {label}
+    </span>
+  );
+}
+
+function PrivacyDisclosure() {
+  return (
+    <details className="privacy-note">
+      <summary>
+        <PanelHeader title="how private is this?" />
+      </summary>
+      <div className="privacy-note__body">
+        <p>
+          The photo is compressed and encoded in your browser, then shown as QR frames. The other phone
+          rebuilds it from the camera feed. There is no account, backend, upload, telemetry, or tracker in
+          the transfer.
+        </p>
+        <p>
+          The first page load is still a normal web request to the host. After the app is cached or
+          installed, transfers need no internet connection. A visible QR animation can be read by people or
+          cameras nearby, and the received photo is saved on the receiver's device.
+        </p>
+      </div>
+    </details>
+  );
+}
+
+function PhotonBeam() {
+  const fragments = Array.from({ length: 14 }, (_, index) => index);
+
+  return (
+    <figure className="beam-stage" aria-label="Photo transferring as QR light between two phones">
+      <div className="beam-screen beam-screen--left">
+        <div className="photo-grid" aria-hidden="true">
+          {Array.from({ length: 16 }, (_, index) => (
+            <span key={index} />
+          ))}
+        </div>
+      </div>
+      <div className="beam-line" aria-hidden="true" />
+      {fragments.map((fragment) => (
+        <span
+          className="frag"
+          key={fragment}
+          style={{ animationDelay: `${fragment * -0.21}s`, top: `${38 + (fragment % 5) * 6}%` }}
+          aria-hidden="true"
+        />
+      ))}
+      <div className="beam-screen beam-screen--right">
+        <div className="qr-mini" aria-hidden="true">
+          {Array.from({ length: 25 }, (_, index) => (
+            <span key={index} className={index % 3 === 0 || index % 7 === 0 ? "is-lit" : ""} />
+          ))}
+        </div>
+      </div>
+    </figure>
   );
 }
 

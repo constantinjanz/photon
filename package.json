@@ -11,6 +11,8 @@
     "typecheck": "tsc -b"
   },
   "dependencies": {
+    "@fontsource/space-grotesk": "^5.2.10",
+    "@fontsource/space-mono": "^5.2.9",
     "@ngraveio/bc-ur": "^1.1.9",
     "buffer": "^6.0.3",
     "qr-scanner": "^1.4.2",
