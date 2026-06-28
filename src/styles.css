@@ -165,15 +165,20 @@ input:focus-visible {
 
 .home-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(260px, 0.55fr);
-  gap: clamp(20px, 3vw, 36px);
-  align-items: center;
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  gap: clamp(20px, 4vw, 34px);
+  align-items: start;
   min-height: calc(100vh - 116px);
-  padding: clamp(20px, 4.8vw, 52px) 0 22px;
+  padding: clamp(28px, 6vw, 70px) 0 22px;
 }
 
 .home-copy {
+  display: grid;
+  width: min(100%, 820px);
   min-width: 0;
+  justify-items: center;
+  text-align: center;
 }
 
 .eyebrow,
@@ -216,6 +221,18 @@ h1 span {
   -webkit-background-clip: text;
 }
 
+.home-wordmark {
+  max-width: none;
+  background: var(--beam);
+  background-clip: text;
+  color: transparent;
+  font-size: clamp(72px, 15vw, 164px);
+  letter-spacing: -0.055em;
+  line-height: 0.84;
+  text-transform: none;
+  -webkit-background-clip: text;
+}
+
 .lede {
   max-width: 650px;
   margin: 16px 0 0;
@@ -228,6 +245,7 @@ h1 span {
 .status-badges {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 9px;
   margin-top: 16px;
 }
@@ -255,8 +273,9 @@ h1 span {
 .action-row {
   display: flex;
   flex-wrap: wrap;
+  justify-content: center;
   gap: 18px;
-  margin-top: 20px;
+  margin-top: 24px;
 }
 
 .action-stack {
@@ -328,12 +347,16 @@ h1 span {
 
 .home-art {
   display: grid;
-  gap: 18px;
+  width: min(390px, 84vw);
+  justify-items: center;
+  gap: 0;
 }
 
 .beam-stage {
   position: relative;
-  min-height: 330px;
+  width: 100%;
+  height: clamp(132px, 18vw, 172px);
+  min-height: 0;
   margin: 0;
   border: 1px solid var(--line);
   border-radius: 10px;
@@ -341,6 +364,30 @@ h1 span {
   background:
     linear-gradient(135deg, rgba(236, 234, 225, 0.04), transparent 32%),
     rgba(10, 11, 15, 0.52);
+}
+
+.why-matters {
+  display: grid;
+  width: min(100%, 52ch);
+  gap: 10px;
+  margin-top: clamp(32px, 5vw, 54px);
+}
+
+.why-matters .eyebrow {
+  margin: 0;
+}
+
+.why-matters p:last-child {
+  margin: 0;
+  color: var(--dim);
+  font-size: clamp(0.96rem, 1.6vw, 1.08rem);
+  line-height: 1.6;
+}
+
+.home-copy > .privacy-note {
+  width: min(100%, 640px);
+  margin-top: clamp(30px, 4vw, 46px);
+  text-align: left;
 }
 
 .beam-screen {
@@ -528,6 +575,7 @@ h1 span {
 .home-footer {
   border-top: 1px solid var(--line);
   padding: 17px 0 0;
+  text-align: center;
 }
 
 .send-grid,
@@ -913,9 +961,9 @@ h1 span {
 
   .home-grid {
     gap: 28px;
-    align-items: start;
+    align-items: center;
     min-height: auto;
-    padding-top: 38px;
+    padding-top: 34px;
   }
 
   .action-row,
@@ -925,7 +973,7 @@ h1 span {
   }
 
   .beam-stage {
-    min-height: 280px;
+    height: 150px;
   }
 
   .send-grid,
@@ -968,6 +1016,18 @@ h1 span {
 @media (max-width: 520px) {
   h1 {
     font-size: clamp(42px, 14vw, 66px);
+  }
+
+  .home-wordmark {
+    font-size: clamp(74px, 22vw, 112px);
+  }
+
+  .home-art {
+    width: min(315px, 82vw);
+  }
+
+  .beam-stage {
+    height: 132px;
   }
 
   .terminal-nav {

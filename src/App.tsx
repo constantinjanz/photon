@@ -77,14 +77,11 @@ function HomeScreen({ onSend, onReceive }: { onSend: () => void; onReceive: () =
 
       <div className="home-grid">
         <div className="home-copy">
-          <p className="eyebrow">phone -&gt; phone / nothing in between</p>
-          <h1>
-            send a photo phone-to-phone with <span>nothing in between.</span>
-          </h1>
-          <p className="lede">
-            No upload, no server, no account. Once Photon is loaded or installed, the transfer works on
-            airplane mode.
-          </p>
+          <div className="home-art" aria-hidden="true">
+            <PhotonBeam />
+          </div>
+          <h1 className="home-wordmark">Photon</h1>
+          <p className="lede">No upload, no server, no account.</p>
 
           <div className="status-badges" aria-label="Privacy properties">
             <StatusBadge label="offline" />
@@ -101,15 +98,24 @@ function HomeScreen({ onSend, onReceive }: { onSend: () => void; onReceive: () =
               Receive a photo
             </ActionButton>
           </div>
-        </div>
 
-        <div className="home-art">
-          <PhotonBeam />
+          <section className="why-matters" aria-labelledby="why-matters-title">
+            <p className="eyebrow" id="why-matters-title">
+              Why it matters
+            </p>
+            <p>
+              Surveillance keeps getting cheaper, and AI makes it automatic - the faces, places, and text in
+              your photos can be scanned, indexed, and stored indefinitely, by systems you'll never see.
+              Photon is the opposite of that: you hand a photo to the person in front of you as light. No
+              upload, no account, nobody in the middle keeping a copy.
+            </p>
+          </section>
+
           <PrivacyDisclosure />
         </div>
       </div>
 
-      <footer className="home-footer">no accounts / no server / works on airplane mode</footer>
+      <footer className="home-footer">no accounts / no server</footer>
     </section>
   );
 }
