@@ -2,6 +2,20 @@ import { Buffer } from "buffer";
 
 type BcUrModule = typeof import("@ngraveio/bc-ur");
 
+interface BrowserProcessShim {
+  browser: true;
+  env: Record<string, string | undefined>;
+  noDeprecation: boolean;
+  pid: number;
+  stderr: {
+    isTTY: false;
+  };
+  throwDeprecation: boolean;
+  traceDeprecation: boolean;
+  emitWarning?: (warning: string | Error) => void;
+  nextTick: (callback: (...args: unknown[]) => void, ...args: unknown[]) => void;
+}
+
 export interface PhotonUrEncoder {
   readonly estimatedPartCount: number;
   readonly messageLength: number;
@@ -35,7 +49,7 @@ export async function createUrEncoder(bytes: Uint8Array, maxFragmentLength: numb
   return {
     estimatedPartCount: encoder.fragmentsLength,
     messageLength: encoder.messageLength,
-    nextPart: () => encoder.nextPart()
+    nextPart: () => encoder.nextPart().toUpperCase()
   };
 }
 
@@ -89,8 +103,21 @@ export async function createUrDecoder(): Promise<PhotonUrDecoder> {
 }
 
 async function loadBcUr(): Promise<BcUrModule> {
-  const globalWithBuffer = globalThis as typeof globalThis & { Buffer?: typeof Buffer };
-  globalWithBuffer.Buffer ??= Buffer;
+  const globalWithNodeShims = globalThis as unknown as Omit<typeof globalThis, "Buffer" | "process"> & {
+    Buffer?: typeof Buffer;
+    process?: BrowserProcessShim;
+  };
+  globalWithNodeShims.Buffer ??= Buffer;
+  globalWithNodeShims.process ??= {
+    browser: true,
+    env: {},
+    noDeprecation: true,
+    pid: 0,
+    stderr: { isTTY: false },
+    throwDeprecation: false,
+    traceDeprecation: false,
+    nextTick: (callback, ...args) => queueMicrotask(() => callback(...args))
+  };
   bcUrPromise ??= import("@ngraveio/bc-ur");
   return bcUrPromise;
 }

@@ -28,10 +28,17 @@ Important boundaries:
 3. Photon computes a SHA-256 hash with Web Crypto.
 4. Photon wraps filename, MIME type, byte length, hash, and image bytes into a small binary envelope.
 5. `@ngraveio/bc-ur` turns that envelope into fountain-code UR frames.
-6. `qrcode` draws each UR frame to a canvas as a looping animated QR code.
-7. `qr-scanner` reads frames from the receiver's camera.
-8. `@ngraveio/bc-ur` rebuilds the envelope once enough frames arrive.
-9. Photon verifies the SHA-256 hash before showing a preview and Download button.
+6. Photon displays those frames in uppercase so QR codes stay smaller and easier to scan.
+7. `qrcode` draws each UR frame to a canvas as a looping animated QR code.
+8. `qr-scanner` reads frames from the receiver's camera.
+9. `@ngraveio/bc-ur` rebuilds the envelope once enough frames arrive.
+10. Photon verifies the SHA-256 hash before showing a preview and Download button.
+
+## Transfer Speed
+
+Photon defaults to the Fast preset, which keeps the previous JPEG size and quality but sends larger, uppercase QR frames at a higher cadence. Reliable keeps the older conservative settings for difficult cameras or shaky lighting. Turbo shortens transfers further by using a smaller JPEG target and a faster QR cadence, so the received photo may look softer.
+
+The time shown in the app is a best-case minimum based on base frame count and QR speed. Real transfers can take longer when the receiver misses frames, the sender screen is dim, the phones move, or the QR is too small in the camera view.
 
 ## Run Locally
 
@@ -70,7 +77,7 @@ Real-phone checklist:
 4. On one phone, tap Send a photo and choose a small photo.
 5. On the other phone, tap Receive a photo and grant camera access.
 6. Hold the receiver steady, fill the framing outline with the sender's QR, and turn up the sender's brightness.
-7. Tune QR speed, fragment size, image edge, and quality if scanning stalls.
+7. Start with Fast, switch to Reliable if scanning stalls, or use Turbo when a softer but shorter transfer is acceptable.
 
 ## iOS Notes
 
@@ -108,4 +115,4 @@ src/transfer/settings.ts Tunable transfer settings
 - One-way transfer only. The sender stops manually.
 - No passphrase encryption yet.
 - No cross-session resume.
-- Large photos are slow. Start with small image sizes while tuning camera reliability.
+- Large photos can still be slow. Use Turbo or smaller image sizes when speed matters more than detail.

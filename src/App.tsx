@@ -10,6 +10,9 @@ import {
   defaultTransferSettings,
   normalizeSettings,
   settingBounds,
+  transferPresetOrder,
+  transferPresets,
+  type TransferPresetId,
   type TransferSettings
 } from "./transfer/settings";
 import { verifyDecodedEnvelope } from "./transfer/verify";
@@ -154,6 +157,10 @@ function useScreenWakeLock(active: boolean): WakeLockState {
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
   const [settings, setSettings] = useState(defaultTransferSettings);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [screen]);
 
   return (
     <main className={`app-shell app-shell--${screen}`}>
@@ -345,6 +352,7 @@ function SendScreen({
               <StatusBadge label={`${formatBytes(prepared.compressed.originalBytes)} original`} />
               <StatusBadge label={`${formatBytes(prepared.compressed.bytes.byteLength)} sending`} />
               <StatusBadge label={`${prepared.encoder.estimatedPartCount} base parts`} />
+              <StatusBadge label={`${formatDuration(prepared.encoder.estimatedPartCount / settings.frameRate)} minimum`} />
             </div>
           )}
         </section>
@@ -447,7 +455,7 @@ function ReceiveScreen({ onHome }: { onHome: () => void }) {
         },
         {
           preferredCamera: "environment",
-          maxScansPerSecond: 18,
+          maxScansPerSecond: 24,
           highlightScanRegion: true,
           highlightCodeOutline: true,
           returnDetailedScanResult: true,
@@ -612,8 +620,40 @@ function SettingsPanel({
     onChange(normalizeSettings({ ...settings, [key]: value }));
   }
 
+  function choosePreset(presetId: TransferPresetId) {
+    onChange({ ...transferPresets[presetId].settings });
+  }
+
+  const currentPreset = findMatchingTransferPreset(settings);
+
   return (
     <div className="settings-panel">
+      <div className="preset-group">
+        <div className="preset-heading">
+          <span>Preset</span>
+          <strong>{currentPreset ? transferPresets[currentPreset].label : "Custom"}</strong>
+        </div>
+        <div className="preset-options" role="group" aria-label="Transfer speed preset">
+          {transferPresetOrder.map((presetId) => {
+            const preset = transferPresets[presetId];
+            const active = currentPreset === presetId;
+
+            return (
+              <button
+                aria-pressed={active}
+                className={`preset-option ${active ? "is-active" : ""}`}
+                key={preset.id}
+                onClick={() => choosePreset(preset.id)}
+                type="button"
+              >
+                <strong>{preset.label}</strong>
+                <span>{preset.caption}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       <SliderRow
         label="QR speed"
         value={settings.frameRate}
@@ -652,6 +692,19 @@ function SettingsPanel({
         format={(value) => `${Math.round(value * 100)}%`}
       />
     </div>
+  );
+}
+
+function findMatchingTransferPreset(settings: TransferSettings): TransferPresetId | undefined {
+  return transferPresetOrder.find((presetId) => sameSettings(settings, transferPresets[presetId].settings));
+}
+
+function sameSettings(left: TransferSettings, right: TransferSettings): boolean {
+  return (
+    left.frameRate === right.frameRate &&
+    left.fragmentLength === right.fragmentLength &&
+    left.imageMaxEdge === right.imageMaxEdge &&
+    left.jpegQuality === right.jpegQuality
   );
 }
 
@@ -826,4 +879,16 @@ function formatBytes(bytes: number): string {
   }
 
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatDuration(seconds: number): string {
+  const safeSeconds = Math.max(1, Math.ceil(seconds));
+
+  if (safeSeconds < 60) {
+    return `${safeSeconds}s`;
+  }
+
+  const minutes = Math.floor(safeSeconds / 60);
+  const remainingSeconds = safeSeconds % 60;
+  return remainingSeconds === 0 ? `${minutes}m` : `${minutes}m ${remainingSeconds}s`;
 }

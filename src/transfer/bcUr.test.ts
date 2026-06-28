@@ -20,6 +20,27 @@ test("decodes BC-UR frames after receiving enough fountain parts", async () => {
   expect(new TextDecoder().decode(finalPayload)).toBe(new TextDecoder().decode(payload));
 });
 
+test("emits uppercase frames that the decoder accepts", async () => {
+  const payload = new TextEncoder().encode("Photon uppercase payload ".repeat(30));
+  const encoder = await createUrEncoder(payload, 120);
+  const decoder = await createUrDecoder();
+  const firstPart = encoder.nextPart();
+  let finalPayload: Uint8Array | undefined;
+
+  expect(firstPart).toBe(firstPart.toUpperCase());
+
+  for (const part of [firstPart, ...Array.from({ length: encoder.estimatedPartCount * 3 }, () => encoder.nextPart())]) {
+    const state = decoder.receivePart(part);
+    if (state.success) {
+      finalPayload = state.payload;
+      break;
+    }
+  }
+
+  expect(finalPayload).toBeDefined();
+  expect(new TextDecoder().decode(finalPayload)).toBe(new TextDecoder().decode(payload));
+});
+
 test("rebuilds and verifies a Photon envelope from shuffled fountain frames with misses", async () => {
   const photoBytes = new TextEncoder().encode("fake jpeg bytes ".repeat(220));
   const sha256 = await sha256Hex(photoBytes);
