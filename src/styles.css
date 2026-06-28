@@ -999,9 +999,19 @@ h1 span {
   }
 
   .qr-canvas {
-    width: min(91vw, 650px);
-    max-width: calc(100vw - 30px);
-    border-width: 12px;
+    width: min(80vw, 52svh, 560px);
+    max-width: calc(100vw - 44px);
+    border-width: 10px;
+  }
+
+  .qr-guidance,
+  .empty-state p {
+    margin-top: 14px;
+  }
+
+  .qr-meta {
+    margin-top: 12px;
+    margin-bottom: 16px;
   }
 
   .receive-panel {
@@ -1028,6 +1038,11 @@ h1 span {
 
   .beam-stage {
     height: 132px;
+  }
+
+  .qr-canvas {
+    width: min(78vw, 48svh, 420px);
+    max-width: calc(100vw - 64px);
   }
 
   .terminal-nav {

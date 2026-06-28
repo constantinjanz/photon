@@ -12,7 +12,7 @@
         },
         {
           "key": "Permissions-Policy",
-          "value": "camera=(self), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()"
+          "value": "camera=(self), screen-wake-lock=(self), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()"
         },
         {
           "key": "Referrer-Policy",

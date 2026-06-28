@@ -42,6 +42,8 @@ interface ReceivedPhoto {
   bytes: number;
 }
 
+type WakeLockState = "active" | "unavailable";
+
 const initialReceiveProgress = (): ReceiveProgress => ({
   status: "starting",
   startedAt: Date.now(),
@@ -52,6 +54,102 @@ const initialReceiveProgress = (): ReceiveProgress => ({
   receivedPartCount: 0,
   message: "Opening camera..."
 });
+
+function useScreenWakeLock(active: boolean): WakeLockState {
+  const [wakeLockState, setWakeLockState] = useState<WakeLockState>("unavailable");
+  const sentinelRef = useRef<WakeLockSentinel | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const wakeLock = "wakeLock" in navigator ? navigator.wakeLock : undefined;
+
+    const handleRelease = () => {
+      const sentinel = sentinelRef.current;
+      if (sentinel) {
+        sentinel.removeEventListener("release", handleRelease);
+        sentinelRef.current = null;
+      }
+
+      if (!cancelled) {
+        setWakeLockState("unavailable");
+      }
+    };
+
+    const releaseLock = async () => {
+      const sentinel = sentinelRef.current;
+      sentinelRef.current = null;
+
+      if (sentinel) {
+        sentinel.removeEventListener("release", handleRelease);
+        if (!sentinel.released) {
+          try {
+            await sentinel.release();
+          } catch {
+            // Releasing is best-effort; the browser may already have revoked it.
+          }
+        }
+      }
+
+      if (!cancelled) {
+        setWakeLockState("unavailable");
+      }
+    };
+
+    const requestLock = async () => {
+      if (!wakeLock || document.visibilityState !== "visible") {
+        setWakeLockState("unavailable");
+        return;
+      }
+
+      if (sentinelRef.current && !sentinelRef.current.released) {
+        setWakeLockState("active");
+        return;
+      }
+
+      try {
+        const sentinel = await wakeLock.request("screen");
+        if (cancelled || document.visibilityState !== "visible") {
+          void sentinel.release().catch(() => undefined);
+          return;
+        }
+
+        sentinelRef.current = sentinel;
+        sentinel.addEventListener("release", handleRelease);
+        setWakeLockState("active");
+      } catch {
+        if (!cancelled) {
+          setWakeLockState("unavailable");
+        }
+      }
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        void requestLock();
+      } else {
+        void releaseLock();
+      }
+    };
+
+    if (!active) {
+      void releaseLock();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    void requestLock();
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      cancelled = true;
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      void releaseLock();
+    };
+  }, [active]);
+
+  return wakeLockState;
+}
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>("home");
@@ -142,6 +240,7 @@ function SendScreen({
         prepared.settings.imageMaxEdge !== settings.imageMaxEdge ||
         prepared.settings.jpegQuality !== settings.jpegQuality),
   );
+  const wakeLockState = useScreenWakeLock(Boolean(prepared && !needsRebuild));
 
   useEffect(() => {
     if (!prepared || !canvasRef.current || needsRebuild) {
@@ -263,6 +362,7 @@ function SendScreen({
                 <StatusBadge label={`${settings.frameRate} fps`} />
                 <StatusBadge label={`${settings.fragmentLength} fragment length`} />
                 <StatusBadge label={`${frameCount} frames shown`} />
+                <StatusBadge label={wakeLockState === "active" ? "screen awake" : "screen may sleep"} />
               </div>
               <button className="button button--ghost" onClick={onHome}>
                 Stop / Done
